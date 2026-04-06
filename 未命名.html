@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家-喵星人 智能家用猫咪娱乐投喂机器人</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4CAF50',
+                        secondary: '#2196F3',
+                        accent: '#FF9800',
+                        danger: '#F44336',
+                        warning: '#FFC107',
+                        info: '#00BCD4',
+                        light: '#F5F5F5',
+                        dark: '#212121',
+                        // 模块颜色
+                        treadmill: '#FF9800',
+                        mole: '#4CAF50',
+                        comb: '#00BCD4',
+                        feeder: '#FF5722',
+                        camera: '#9C27B0',
+                        litter: '#607D8B'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .transition-all-300 {
+                transition: all 0.3s ease;
+            }
+            .card-shadow {
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            .btn-shadow {
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            }
+            .rotate-y-180 {
+                transform: rotateY(180deg);
+            }
+            .preserve-3d {
+                transform-style: preserve-3d;
+            }
+            .perspective {
+                perspective: 1000px;
+            }
+            .backface-hidden {
+                backface-visibility: hidden;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <!-- 初始界面 -->
+    <div id="start-screen" class="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+        <div class="text-center">
+            <img src="https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/eea697287b46422580ac607a964d7f3e.png~tplv-a9rns2rl98-24:720:720.png?lk3s=8e244e95&rcl=2026040614204779CAD215E868D2DDB819&rrcfp=8a172a1a&x-expires=1776061247&x-signature=x09hPHkHBR%2FJJ48TdwaNQN%2FyOGQ%3D" 
+                 alt="家-喵星人" 
+                 class="w-64 h-64 object-contain mx-auto mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-6">家-喵星人</h1>
+            <p class="text-xl text-gray-600 mb-8">智能家用猫咪娱乐投喂机器人</p>
+            <button id="open-app-btn" 
+                    class="bg-primary hover:bg-primary/90 text-white text-xl py-3 px-8 rounded-full transition-all-300 btn-shadow">
+                打开软件
+            </button>
+        </div>
+    </div>
+
+    <!-- 主界面 -->
+    <div id="main-screen" class="hidden min-h-screen bg-gray-100">
+        <header class="bg-white shadow-sm">
+            <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+                <div class="flex items-center">
+                    <button id="back-btn" class="mr-4 text-gray-600 hover:text-gray-900">
+                        <i class="fa fa-arrow-left text-xl"></i>
+                    </button>
+                    <h1 class="text-2xl font-bold text-gray-800">家-喵星人</h1>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-gray-600 mr-4">你好，铲屎官</span>
+                    <div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
+                        <i class="fa fa-user text-gray-600"></i>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="container mx-auto px-4 py-6">
+            <!-- 数据概览 -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white rounded-lg p-4 shadow-sm">
+                    <p class="text-gray-500 text-sm">今日活动</p>
+                    <p class="text-2xl font-bold text-gray-800">6 次</p>
+                </div>
+                <div class="bg-white rounded-lg p-4 shadow-sm">
+                    <p class="text-gray-500 text-sm">消耗热量</p>
+                    <p class="text-2xl font-bold text-gray-800">1.8 kcal</p>
+                </div>
+                <div class="bg-white rounded-lg p-4 shadow-sm">
+                    <p class="text-gray-500 text-sm">剩余猫粮</p>
+                    <p class="text-2xl font-bold text-gray-800">150g</p>
+                </div>
+                <div class="bg-white rounded-lg p-4 shadow-sm">
+                    <p class="text-gray-500 text-sm">如厕次数</p>
+                    <p class="text-2xl font-bold text-gray-800">3 次</p>
+                </div>
+            </div>
+
+            <!-- 功能模块 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- 跑步机模块 -->
+                <div class="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all-300 cursor-pointer" 
+                     onclick="showModule('treadmill-module')">
+                    <div class="bg-treadmill p-4 text-white">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="text-xl font-bold">跑步机</h3>
+                                <p class="text-sm opacity-80">最近使用: 今天 14:30</p>
+                            </div>
+                            <img src="https://p11-doubao-search-sign.byteimg.com/ecom-shop-material/jpeg_m_2ed528d4766dbbafd4f09b536bc07c2f_sx_175813_www800-800~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1791007454&x-signature=sh6fM2Q%2FIcp8lrfEsAB2EYeyrxc%3D" 
+                                 alt="跑步机" 
+                                 class="w-16 h-16 object-contain">
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <div class="flex justify-between text-sm text-gray-600">
+                            <span>状态</span>
+                            <span>待机</span>
+                        </div>
+                        <div class="flex justify-between text-sm text-gray-600 mt-2">
+                            <span>累计里程</span>
+                            <span>0.5 km</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 地鼠机模块 -->
+                <div class="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all-300 cursor-pointer" 
+                     onclick="showModule('mole-module')">
+                    <div class="bg-mole p-4 text-white">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="text-xl font-bold">地鼠机</h3>
+                                <p class="text-sm opacity-80">最近使用: 今天 10:15</p>
+                            </div>
+                            <img src="https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/1715066998111c3a80f3a7d8d8d8d8d8.png~tplv-a9rns2rl98-image.png" 
+                                 alt="地鼠机" 
+                                 class="w-16 h-16 object-contain">
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <div class="flex justify-between text-sm text-gray-600">
+                            <span>状态</span>
+                            <span>待机</span>
+                        </div>
+                        <div class="flex justify-between text-sm text-gray-600 mt-2">
+                            <span>抓到地鼠</span>
+                            <span>12 只</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 梳毛机模块 -->
+                <div class="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all-300 cursor-pointer" 
+                     onclick="showModule('comb-module')">
+                    <div class="bg-comb p-4 text-white">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="text-xl font-bold">梳毛机</h3>
+                                <p class="text-sm opacity-80">最近使用: 昨天 18:45</p>
+                            </div>
+                            <img src="https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/1715067000a1b2c3d4e5f6g7h8i9j0k1.png~tplv-a9rns2rl98-image.png" 
+                                 alt="梳毛机" 
+                                 class="w-16 h-16 object-contain">
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <div class="flex justify-between text-sm text-gray-600">
+                            <span>状态</span>
+                            <span>待机</span>
+                        </div>
+                        <div class="flex justify-between text-sm text-gray-600 mt-2">
+                            <span>上次时长</span>
+                            <span>5 分钟</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 喂食喂水模块 -->
+                <div class="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all-300 cursor-pointer" 
+                     onclick="showModule('feeder-module')">
+                    <div class="bg-feeder p-4 text-white">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="text-xl font-bold">喂食喂水</h3>
+                                <p class="text-sm opacity-80">最近使用: 今天 08:00</p>
+                            </div>
+                            <img src="https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/1715067002z9x8c7v6b5n4m3l2k1j0i9h8.png~tplv-a9rns2rl98-image.png" 
+                                 alt="喂食喂水" 
+                                 class="w-16 h-16 object-contain">
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <div class="flex justify-between text-sm text-gray-600">
+                            <span>猫粮剩余</span>
+                            <span>150g</span>
+                        </div>
+                        <div class="flex justify-between text-sm text-gray-600 mt-2">
+                            <span>水量剩余</span>
+                            <span>200ml</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 视频互动模块 -->
+                <div class="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all-300 cursor-pointer" 
+                     onclick="showModule('camera-module')">
+                    <div class="bg-camera p-4 text-white">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="text-xl font-bold">视频互动</h3>
+                                <p class="text-sm opacity-80">最近使用: 今天 09:30</p>
+                            </div>
+                            <img src="https://p11-doubao-search-sign.byteimg.com/ecom-shop-material/mrGHzCSf_m_2bd9541618bf3ec10ac6c73c5fe8d477_sx_52800_www1000-1000~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1791007467&x-signature=%2FUX22qTMTqHatP3At%2BKiyM%2Fjj1Q%3D" 
+                                 alt="视频互动" 
+                                 class="w-16 h-16 object-contain">
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <div class="flex justify-between text-sm text-gray-600">
+                            <span>状态</span>
+                            <span>在线</span>
+                        </div>
+                        <div class="flex justify-between text-sm text-gray-600 mt-2">
+                            <span>电量</span>
+                            <span>85%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 猫砂清洁模块 -->
+                <div class="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all-300 cursor-pointer" 
+                     onclick="showModule('litter-module')">
+                    <div class="bg-litter p-4 text-white">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="text-xl font-bold">猫砂清洁</h3>
+                                <p class="text-sm opacity-80">最近使用: 今天 11:20</p>
+                            </div>
+                            <img src="https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/1715066996a1b2c3d4e5f6g7h8i9j0k1l2.png~tplv-a9rns2rl98-image.png" 
+                                 alt="猫砂清洁" 
+                                 class="w-16 h-16 object-contain">
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <div class="flex justify-between text-sm text-gray-600">
+                            <span>状态</span>
+                            <span>待机</span>
+                        </div>
+                        <div class="flex justify-between text-sm text-gray-600 mt-2">
+                            <span>清理次数</span>
+                            <span>3 次</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 快捷操作 -->
+            <div class="mt-8 bg-white rounded-lg p-4 shadow-sm">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">快捷操作</h3>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <button class="flex flex-col items-center justify-center p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all-300">
+                        <i class="fa fa-play-circle text-primary text-2xl mb-2"></i>
+                        <span class="text-sm text-gray-700">开始喂食</span>
+                    </button>
+                    <button class="flex flex-col items-center justify-center p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all-300">
+                        <i class="fa fa-video-camera text-secondary text-2xl mb-2"></i>
+                        <span class="text-sm text-gray-700">查看猫咪</span>
+                    </button>
+                    <button class="flex flex-col items-center justify-center p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all-300">
+                        <i class="fa fa-refresh text-accent text-2xl mb-2"></i>
+                        <span class="text-sm text-gray-700">清理猫砂</span>
+                    </button>
+                    <button class="flex flex-col items-center justify-center p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all-300">
+                        <i class="fa fa-bell text-info text-2xl mb-2"></i>
+                        <span class="text-sm text-gray-700">设置提醒</span>
+                    </button>
+                    <button class="flex flex-col items-center justify-center p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all-300">
+                        <i class="fa fa-cog text-gray-600 text-2xl mb-2"></i>
+                        <span class="text-sm text-gray-700">更多设置</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 跑步机模块 -->
+    <div id="treadmill-module" class="hidden min-h-screen bg-gray-100">
+        <header class="bg-white shadow-sm">
+            <div class="container mx-auto px-4 py-4 flex items-center">
+                <button class="module-back-btn mr-4 text-gray-600 hover:text-gray-900">
+                    <i class="fa fa-arrow-left text-xl"></i>
+                </button>
+                <h1 class="text-2xl font-bold text-gray-800">跑步机</h1>
+            </div>
+        </header>
+
+        <main class="container mx-auto px-4 py-6">
+            <div class="bg-white rounded-lg overflow-hidden shadow-sm mb-6">
+                <div class="bg-treadmill p-4 text-white">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-2xl font-bold">3.2 km/h</h3>
+                            <p class="text-sm opacity-80">00:12:00 | 2.8 km | 24 kcal</p>
+                        </div>
+                        <img src="https://p11-doubao-search-sign.byteimg.com/ecom-shop-material/jpeg_m_2ed528d4766dbbafd4f09b536bc07c2f_sx_175813_www800-800~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1791007454&x-signature=sh6fM2Q%2FIcp8lrfEsAB2EYeyrxc%3D" 
+                             alt="跑步机" 
+                             class="w-24 h-24 object-contain">
+                    </div>
+                </div>
+                <div class="p-4">
+                    <div class="grid grid-cols-3 gap-4 mb-4">
+                        <div class="bg-gray-50 rounded-lg p-3 text-center">
+                            <p class="text-gray-500 text-sm">今日里程</p>
+                            <p class="text-xl font-bold text-gray-800">2.45 km</p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-3 text-center">
+                            <p class="text-gray-500 text-sm">平均速度</p>
+                            <p class="text-xl font-bold text-gray-800">3.2 km/h</p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-3 text-center">
+                            <p class="text-gray-500 text-sm">消耗热量</p>
+                            <p class="text-xl font-bold text-gray-800">1.8 kcal</p>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <p class="text-gray-700 mb-2">速度调节</p>
+                        <input type="range" min="0" max="6" value="3.2" step="0.1" 
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" 
+                               id="speed-slider">
+                        <div class="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>0 km/h</span>
+                            <span>3 km/h</span>
+                            <span>6 km/h</span>
+                        </div>
+                        <div class="mt-2 p-2 bg-yellow-50 text-yellow-700 text-sm rounded-lg">
+                            <i class="fa fa-exclamation-triangle mr-1"></i> 安全警告：速度超过4.5km/h可能对猫咪造成伤害，请谨慎调节
+                        </div>
+                    </div>
+                    <div class="flex justify-between">
+                        <button class="bg-treadmill hover:bg-treadmill/90 text-white py-2 px-6 rounded-lg transition-all-300 btn-shadow">
+                            <i class="fa fa-play mr-2"></i> 开始
+                        </button>
+                        <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-6 rounded-lg transition-all-300 btn-shadow">
+                            <i class="fa fa-stop mr-2"></i> 停止
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg overflow-hidden shadow-sm">
+                <div class="p-4">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">历史记录</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <div>
+                                <p class="font-medium text-gray-800">今天 14:30</p>
+                                <p class="text-sm text-gray-600">持续时间: 15分钟</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-medium text-gray-800">3.5 km/h</p>
+                                <p class="text-sm text-gray-600">0.88 km</p>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <div>
+                                <p class="font-medium text-gray-800">今天 09:15</p>
+                                <p class="text-sm text-gray-600">持续时间: 10分钟</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-medium text-gray-800">3.0 km/h</p>
+                                <p class="text-sm text-gray-600">0.50 km</p>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <div>
+                                <p class="font-medium text-gray-800">昨天 16:45</p>
+                                <p class="text-sm text-gray-600">持续时间: 20分钟</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-medium text-gray-800">2.8 km/h</p>
+                                <p class="text-sm text-gray-600">0.93 km</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 地鼠机模块 -->
+    <div id="mole-module" class="hidden min-h-screen bg-gray-100">
+        <header class="bg-white shadow-sm">
+            <div class="container mx-auto px-4 py-4 flex items-center">
+                <button class="module-back-btn mr-4 text-gray-600 hover:text-gray-900">
+                    <i class="fa fa-arrow-left text-xl"></i>
+                </button>
+                <h1 class="text-2xl font-bold text-gray-800">地鼠机</h1>
+            </div>
+        </header>
+
+        <main class="container mx-auto px-4 py-6">
+            <div class="bg-white rounded-lg overflow-hidden shadow-sm mb-6">
+                <div class="bg-mole p-4 text-white">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-2xl font-bold">12 只</h3>
+                            <p class="text-sm opacity-80">5 分钟 | 78% 命中率</p>
+                        </div>
+                        <img src="https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/1715066998111c3a80f3a7d8d8d8d8d8.png~tplv-a9rns2rl98-image.png" 
+                             alt="地鼠机" 
+                             class="w-24 h-24 object-contain">
+                    </div>
+                </div>
+                <div class="p-4">
+                    <div class="flex mb-4">
+                        <button class="bg-mole text-white py-2 px-6 rounded-l-lg transition-all-300 btn-shadow">
+                            自动运行
+                        </button>
+                        <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-6 rounded-r-lg transition-all-300 btn-shadow">
+                            手动操控
+                        </button>
+                    </div>
+                    <div class="mb-4">
+                        <p class="text-gray-700 mb-2">速度调节</p>
+                        <input type="range" min="1" max="5" value="3" 
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        <div class="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>慢</span>
+                            <span>中</span>
+                            <span>快</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between">
+                        <button class="bg-mole hover:bg-mole/90 text-white py-2 px-6 rounded-lg transition-all-300 btn-shadow">
+                            <i class="fa fa-play mr-2"></i> 开始
+                        </button>
+                        <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-6 rounded-lg transition-all-300 btn-shadow">
+                            <i class="fa fa-stop mr-2"></i> 停止
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg overflow-hidden shadow-sm">
+                <div class="p-4">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">手动操控</h3>
+                    <!-- 前后退按钮 -->
+                    <div class="flex justify-between mb-6">
+                        <button class="w-1/2 mr-2 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-lg transition-all-300">
+                            <i class="fa fa-arrow-left mr-2"></i> 后退
+                        </button>
+                        <button class="w-1/2 ml-2 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-lg transition-all-300">
+                            前进 <i class="fa fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                    <!-- 旋转轴控制 -->
+                    <div class="mb-6">
+                        <h4 class="text-md font-semibold text-gray-700 mb-3">旋转轴控制</h4>
+                        <!-- 旋转轴A -->
+                        <div class="bg-green-50 rounded-xl p-4 mb-3 border border-green-100">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="flex items-center">
+                                    <span class="w-6 h-6 bg-green-100 text-green-800 rounded-full flex items-center justify-center font-bold mr-2">A</span>
+                                    <span class="text-gray-700 font-medium">旋转轴 A</span>
+                                </div>
+                                <button class="bg-white hover:bg-gray-100 text-green-700 border border-green-300 py-1 px-3 rounded-full text-sm font-medium">
+                                    <i class="fa fa-repeat mr-1"></i> 正转
+                                </button>
+                            </div>
+                            <button class="w-full bg-white hover:bg-green-50 text-green-700 border border-green-200 py-3 rounded-lg transition-all-300">
+                                <i class="fa fa-repeat mr-2"></i> 执行正转
+                            </button>
+                        </div>
+                        <!-- 旋转轴B -->
+                        <div class="bg-green-50 rounded-xl p-4 mb-3 border border-green-100">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="flex items-center">
+                                    <span class="w-6 h-6 bg-green-100 text-green-800 rounded-full flex items-center justify-center font-bold mr-2">B</span>
+                                    <span class="text-gray-700 font-medium">旋转轴 B</span>
+                                </div>
+                                <button class="bg-white hover:bg-gray-100 text-green-700 border border-green-300 py-1 px-3 rounded-full text-sm font-medium">
+                                    <i class="fa fa-repeat mr-1"></i> 正转
+                                </button>
+                            </div>
+                            <button class="w-full bg-white hover:bg-green-50 text-green-700 border border-green-200 py-3 rounded-lg transition-all-300">
+                                <i class="fa fa-repeat mr-2"></i> 执行正转
+                            </button>
+                        </div>
+                        <!-- 旋转轴C -->
+                        <div class="bg-cyan-50 rounded-xl p-4 mb-3 border border-cyan-100">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="flex items-center">
+                                    <span class="w-6 h-6 bg-cyan-100 text-cyan-800 rounded-full flex items-center justify-center font-bold mr-2">C</span>
+                                    <span class="text-gray-700 font-medium">旋转轴 C</span>
+                                </div>
+                                <button class="bg-white hover:bg-gray-100 text-cyan-700 border border-cyan-300 py-1 px-3 rounded-full text-sm font-medium">
+                                    <i class="fa fa-repeat mr-1"></i> 正转
+                                </button>
+                            </div>
+                            <button class="w-full bg-white hover:bg-cyan-50 text-cyan-700 border border-cyan-200 py-3 rounded-lg transition-all-300">
+                                <i class="fa fa-repeat mr-2"></i> 执行正转
+                            </button>
+                        </div>
+                    </div>
+                    <!-- 手动计分 -->
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h4 class="text-md font-semibold text-gray-700">手动计分</h4>
+                                <p class="text-xs text-gray-500">猫咪成功抓到地鼠时点击</p>
+                            </div>
+                            <div class="flex items-center">
+                                <button class="w-8 h-8 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full flex items-center justify-center mr-2">
+                                    <i class="fa fa-minus"></i>
+                                </button>
+                                <span class="text-3xl font-bold text-green-600">12</span>
+                                <button class="w-8 h-8 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center ml-2">
+                                    <i class="fa fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 梳毛机模块 -->
+    <div id="comb-module" class="hidden min-h-screen bg-gray-100">
+        <header class="bg-white shadow-sm">
+            <div class="container mx-auto px-4 py-4 flex items-center">
+                <button class="module-back-btn mr-4 text-gray-600 hover:text-gray-900">
+                    <i class="fa fa-arrow-left text-xl"></i>
+                </button>
+                <h1 class="text-2xl font-bold text-gray-800">梳毛机</h1>
+            </div>
+        </header>
+
+        <main class="container mx-auto px-4 py-6">
+            <div class="bg-white rounded-lg overflow-hidden shadow-sm mb-6">
+                <div class="bg-purple-500 p-4 text-white">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-2xl font-bold">待机</h3>
+                            <p class="text-sm opacity-80">今日梳理 3次 | 累计时长 42分钟 | 毛发清洁度 优秀</p>
+                        </div>
+                        <img src="https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/1715067000a1b2c3d4e5f6g7h8i9j0k1.png~tplv-a9rns2rl98-image.png" 
+                             alt="梳毛机" 
+                             class="w-24 h-24 object-contain">
+                    </div>
+                </div>
+                <div class="p-4">
+                    <div class="flex mb-4">
+                        <button class="bg-gray-100 text-gray-700 py-2 px-6 rounded-l-lg transition-all-300 btn-shadow">
+                            <i class="fa fa-home mr-2"></i> 自动刷毛
+                        </button>
+                        <button class="bg-purple-500 hover:bg-purple-600 text-white py-2 px-6 rounded-r-lg transition-all-300 btn-shadow">
+                            <i class="fa fa-hand-pointer-o mr-2"></i> 手动刷毛
+                        </button>
+                    </div>
+                    <!-- 当前位置 -->
+                    <div class="mb-4">
+                        <h4 class="text-md font-semibold text-gray-700 mb-3">当前位置</h4>
+                        <div class="grid grid-cols-3 gap-3 mb-3">
+                            <div class="bg-gray-50 rounded-lg p-3 text-center">
+                                <i class="fa fa-exchange text-purple-500 text-xl mb-1"></i>
+                                <p class="text-sm text-gray-600">左右</p>
+                                <p class="text-sm font-bold text-gray-800">居中</p>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-3 text-center">
+                                <i class="fa fa-arrows-v text-purple-500 text-xl mb-1"></i>
+                                <p class="text-sm text-gray-600">前后</p>
+                                <p class="text-sm font-bold text-gray-800">居中</p>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-3 text-center">
+                                <i class="fa fa-expand text-purple-500 text-xl mb-1"></i>
+                                <p class="text-sm text-gray-600">上下</p>
+                                <p class="text-sm font-bold text-gray-800">居中</p>
+                            </div>
+                        </div>
+                        <button class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg transition-all-300">
+                            <i class="fa fa-crosshairs mr-2"></i> 归位居中
+                        </button>
+                    </div>
+                    <!-- 方向控制（十字布局） -->
+                    <div class="mb-4">
+                        <h4 class="text-md font-semibold text-gray-700 mb-3">方向控制</h4>
+                        <div class="flex justify-center">
+                            <div class="grid grid-cols-3 gap-2 w-48">
+                                <!-- 上 -->
+                                <div class="col-start-2">
+                                    <button class="w-12 h-12 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg flex items-center justify-center transition-all-300 btn-shadow">
+                                        <i class="fa fa-arrow-up"></i>
+                                    </button>
+                                </div>
+                                <!-- 左 -->
+                                <div>
+                                    <button class="w-12 h-12 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg flex items-center justify-center transition-all-300 btn-shadow">
+                                        <i class="fa fa-arrow-left"></i>
+                                    </button>
+                                </div>
+                                <!-- 中间归位 -->
+                                <div>
+                                    <button class="w-12 h-12 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg flex items-center justify-center transition-all-300 btn-shadow">
+                                        <i class="fa fa-refresh"></i>
+                                    </button>
+                                </div>
+                                <!-- 右 -->
+                                <div>
+                                    <button class="w-12 h-12 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg flex items-center justify-center transition-all-300 btn-shadow">
+                                        <i class="fa fa-arrow-right"></i>
+                                    </button>
+                                </div>
+                                <!-- 下 -->
+                                <div class="col-start-2">
+                                    <button class="w-12 h-12 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg flex items-center justify-center transition-all-300 btn-shadow">
+                                        <i class="fa fa-arrow-down"></i>
+                                    </button>
+                                </div>
+                                <!-- 前后 -->
+                                <div class="col-start-3 row-start-2">
+                                    <button class="w-12 h-12 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg flex items-center justify-center transition-all-300 btn-shadow">
+                                        <i class="fa fa-arrow-up"></i>
+                                    </button>
+                                </div>
+                                <div class="col-start-3 row-start-4">
+                                    <button class="w-12 h-12 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg flex items-center justify-center transition-all-300 btn-shadow">
+                                        <i class="fa fa-arrow-down"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 刷毛速度 -->
+                    <div class="mb-4">
+                        <h4 class="text-md font-semibold text-gray-700 mb-3">刷毛速度</h4>
+                        <div class="flex justify-center space-x-2">
+                            <button class="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full text-sm">慢</button>
+                            <button class="px-3 py-1 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-full text-sm">中</button>
+                            <button class="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full text-sm">快</button>
+                        </div>
+                    </div>
+                    <button class="w-full bg-purple-500 hover:bg-purple-600 text-white py-3 rounded-lg transition-all-300 btn-shadow">
+                        <i class="fa fa-magic mr-2"></i> 开始手动刷毛
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 喂食喂水模块 -->
+    <div id="feeder-module" class="hidden min-h-screen bg-gray-100">
+        <header class="bg-white shadow-sm">
+            <div class="container mx-auto px-4 py-4 flex items-center">
+                <button class="module-back-btn mr-4 text-gray-600 hover:text-gray-900">
+                    <i class="fa fa-arrow-left text-xl"></i>
+                </button>
+                <h1 class="text-2xl font-bold text-gray-800">喂食喂水</h1>
+            </div>
+        </header>
+
+        <main class="container mx-auto px-4 py-6">
+            <div class="bg-white rounded-lg overflow-hidden shadow-sm mb-6">
+                <div class="bg-feeder p-4 text-white">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-2xl font-bold">150 g</h3>
+                            <p class="text-sm opacity-80">剩余猫粮 | 今日已喂食 3 次</p>
+                        </div>
+                        <img src="https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/1715067002z9x8c7v6b5n4m3l2k1j0i9h8.png~tplv-a9rns2rl98-image.png" 
+                             alt="喂食喂水" 
+                             class="w-24 h-24 object-contain">
+                    </div>
+                </div>
+                <div class="p-4">
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <div class="flex justify-between items-center mb-2">
+                                <p class="text-gray-700">猫粮剩余</p>
+                                <p class="font-bold text-gray-800">150 g</p>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-feeder h-2.5 rounded-full" style="width: 15%"></div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <div class="flex justify-between items-center mb-2">
+                                <p class="text-gray-700">水量剩余</p>
+                                <p class="font-bold text-gray-800">200 ml</p>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-secondary h-2.5 rounded-full" style="width: 20%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button class="bg-feeder hover:bg-feeder/90 text-white py-2 px-4 rounded-lg transition-all-300 btn-shadow">
+                            <i class="fa fa-cutlery mr-2"></i> 添加猫粮10g
+                        </button>
+                        <button class="bg-secondary hover:bg-secondary/90 text-white py-2 px-4 rounded-lg transition-all-300 btn-shadow">
+                            <i class="fa fa-tint mr-2"></i> 添加水20ml
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg overflow-hidden shadow-sm">
+                <div class="p-4">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">喂食计划</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <div>
+                                <p class="font-medium text-gray-800">早餐</p>
+                                <p class="text-sm text-gray-600">每天 08:00</p>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="text-sm text-gray-600 mr-2">50g</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" value="" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-feeder"></div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <div>
+                                <p class="font-medium text-gray-800">午餐</p>
+                                <p class="text-sm text-gray-600">每天 12:00</p>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="text-sm text-gray-600 mr-2">40g</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" value="" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-feeder"></div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <div>
+                                <p class="font-medium text-gray-800">晚餐</p>
+                                <p class="text-sm text-gray-600">每天 18:00</p>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="text-sm text-gray-600 mr-2">60g</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" value="" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-feeder"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="mt-4 w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg transition-all-300 btn-shadow">
+                        <i class="fa fa-plus mr-2"></i> 添加喂食计划
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 视频互动模块 -->
+    <div id="camera-module" class="hidden min-h-screen bg-gray-100">
+        <header class="bg-white shadow-sm">
+            <div class="container mx-auto px-4 py-4 flex items-center">
+                <button class="module-back-btn mr-4 text-gray-600 hover:text-gray-900">
+                    <i class="fa fa-arrow-left text-xl"></i>
+                </button>
+                <h1 class="text-2xl font-bold text-gray-800">视频互动</h1>
+            </div>
+        </header>
+
+        <main class="container mx-auto px-4 py-6">
+            <div class="bg-white rounded-lg overflow-hidden shadow-sm mb-6">
+                <div class="bg-camera p-4 text-white">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-2xl font-bold">待机</h3>
+                            <p class="text-sm opacity-80">3 次 | 42:09 总时长</p>
+                        </div>
+                        <img src="https://p11-doubao-search-sign.byteimg.com/ecom-shop-material/mrGHzCSf_m_2bd9541618bf3ec10ac6c73c5fe8d477_sx_52800_www1000-1000~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1791007467&x-signature=%2FUX22qTMTqHatP3At%2BKiyM%2Fjj1Q%3D" 
+                             alt="视频互动" 
+                             class="w-24 h-24 object-contain">
+                    </div>
+                </div>
+                <div class="p-4">
+                    <div class="bg-gray-800 rounded-lg h-64 flex items-center justify-center mb-4">
+                        <p class="text-white text-center">
+                            <i class="fa fa-video-camera text-4xl mb-2"></i><br>
+                            点击开始视频
+                        </p>
+                    </div>
+                    <div class="flex justify-between">
+                        <button class="bg-camera hover:bg-camera/90 text-white py-2 px-6 rounded-lg transition-all-300 btn-shadow">
+                            <i class="fa fa-video-camera mr-2"></i> 开始视频
+                        </button>
+                        <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-6 rounded-lg transition-all-300 btn-shadow">
+                            <i class="fa fa-microphone mr-2"></i> 语音对话
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg overflow-hidden shadow-sm">
+                <div class="p-4">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">摄像头控制</h3>
+                    <!-- 十字布局 -->
+                    <div class="flex justify-center mb-4">
+                        <div class="grid grid-cols-3 gap-2 w-48">
+                            <!-- 上 -->
+                            <div class="col-start-2">
+                                <button class="w-12 h-12 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg flex items-center justify-center transition-all-300 btn-shadow">
+                                    <i class="fa fa-arrow-up"></i>
+                                </button>
+                            </div>
+                            <!-- 左 -->
+                            <div>
+                                <button class="w-12 h-12 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg flex items-center justify-center transition-all-300 btn-shadow">
+                                    <i class="fa fa-arrow-left"></i>
+                                </button>
+                            </div>
+                            <!-- 中间归位 -->
+                            <div>
+                                <button class="w-12 h-12 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg flex items-center justify-center transition-all-300 btn-shadow">
+                                    <i class="fa fa-refresh"></i>
+                                </button>
+                            </div>
+                            <!-- 右 -->
+                            <div>
+                                <button class="w-12 h-12 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg flex items-center justify-center transition-all-300 btn-shadow">
+                                    <i class="fa fa-arrow-right"></i>
+                                </button>
+                            </div>
+                            <!-- 下 -->
